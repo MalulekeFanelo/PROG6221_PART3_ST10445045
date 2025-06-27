@@ -1,4 +1,4 @@
-🛡️ SecuBot – Cybersecurity Awareness Assistant (WPF Edition)
+#🛡️ SecuBot – Cybersecurity Awareness Assistant (WPF Edition)#
 SecuBot is an interactive WPF-based chatbot assistant built in C#, designed to promote cybersecurity awareness through natural conversation, reminders, and gamified learning. It simulates basic natural language understanding and empowers users to stay cyber smart through personalized tips, tasks, and quizzes.
 
 Unlisted Youtube link: https://youtu.be/31jLUG549KY 
