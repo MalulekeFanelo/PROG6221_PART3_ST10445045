@@ -1,4 +1,7 @@
-﻿using System.Media;
+﻿using System;
+using System.IO;
+using System.Media;
+using System.Windows;
 
 namespace SecurityCyberBot.Utilities
 {
@@ -8,15 +11,25 @@ namespace SecurityCyberBot.Utilities
         {
             try
             {
-                string filePath = @"C:\path\to\ChatBotVoice.wav"; // Update path
-                using (SoundPlayer player = new SoundPlayer(filePath))
+                string fileName = "ChatBotVoice.wav";
+                string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+
+                if (File.Exists(filePath))
                 {
-                    player.PlaySync();
+                    using (SoundPlayer player = new SoundPlayer(filePath))
+                    {
+                        player.PlaySync();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"Audio file not found: {filePath}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            catch { /* Handle error silently */ }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error playing audio: {ex.Message}", "Audio Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }
-
-    
