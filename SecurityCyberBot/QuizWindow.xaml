@@ -1,0 +1,36 @@
+﻿<Window x:Class="SecurityCyberBot.QuizWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cybersecurity Quiz" Height="500" Width="650"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Question -->
+        <TextBlock x:Name="QuestionText" Grid.Row="0" Margin="15" FontSize="16" 
+                   FontWeight="Bold" TextWrapping="Wrap"/>
+
+        <!-- Answer Options -->
+        <StackPanel x:Name="OptionsPanel" Grid.Row="1" Margin="15,0">
+            <!-- RadioButtons added dynamically here -->
+        </StackPanel>
+
+        <!-- Feedback -->
+        <TextBlock x:Name="FeedbackText" Grid.Row="2" Margin="15" FontStyle="Italic" TextWrapping="Wrap"/>
+
+        <!-- Navigation -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <Button x:Name="PrevButton" Content="Previous" Width="100" Margin="5" 
+                    Padding="5" Click="PrevButton_Click"/>
+            <Button x:Name="NextButton" Content="Next" Width="100" Margin="5" 
+                    Padding="5" Click="NextButton_Click"/>
+            <Button x:Name="SubmitButton" Content="Submit" Width="100" Margin="5" 
+                    Padding="5" Click="SubmitButton_Click" Visibility="Collapsed"/>
+        </StackPanel>
+    </Grid>
+</Window>

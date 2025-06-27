@@ -1,0 +1,24 @@
+﻿<Window x:Class="SecurityCyberBot.LogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Activity Log" Height="400" Width="600"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Log Display -->
+        <ListBox x:Name="LogList" Margin="10" FontSize="14">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="2"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Button Grid.Row="1" Content="Close" Margin="10" HorizontalAlignment="Right" 
+                Width="100" Padding="5" FontSize="14" Click="CloseButton_Click"/>
+    </Grid>
+</Window>
