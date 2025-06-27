@@ -63,7 +63,7 @@ namespace SecurityCyberBot.Utilities
          | |        | |
         _| |________| |_
       .' |_|        |_| '.
-     '._____ ____ _____.'  CYBER LOCKED
+     '._____ ____ _____.'  Cybersecurity Bot
      |     .'____'.     |  ───────────────
      '.__.'.'    '.'.__.'
      '.__  | LOCK |  __.'

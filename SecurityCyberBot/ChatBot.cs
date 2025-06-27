@@ -11,6 +11,10 @@ namespace SecurityCyberBot
         private string userMood = "";
         private string favouriteTopic = "";
         private string currentTopic = "";
+        private bool awaitingReminderConfirmation = false;
+        private CybersecurityTask pendingTask = null;
+        private bool awaitingReminderDate = false;
+
 
         public List<CybersecurityTask> Tasks { get; } = new List<CybersecurityTask>();
         public List<QuizQuestion> QuizQuestions { get; } = new List<QuizQuestion>();
@@ -111,7 +115,7 @@ namespace SecurityCyberBot
             InitializeQuizQuestions();
             ActivityLog.Add($"Session started for {userName} at {DateTime.Now}");
         }
-
+        
         public string ProcessInput(string input)
         {
             input = input.ToLower();
@@ -131,7 +135,7 @@ namespace SecurityCyberBot
                 return response;
             }
 
-            if (!string.IsNullOrEmpty(currentTopic) && ContainsAny(input, "what do you mean", "can you explain", "tell me more", "explain more", "i’m confused", "im confused", "i dont understand", "don't understand"))
+            if (!string.IsNullOrEmpty(currentTopic) && ContainsAny(input, "what do you mean", "can you explain", "explain further", "tell me more", "explain more", "i’m confused", "im confused", "i dont understand", "don't understand", "still confused", "in depth", "i don't get it"))
             {
                 response += $"Sure! Let me explain more about {currentTopic}:\n" + RespondWithRandomTip(currentTopic);
                 ActivityLog.Add($"Clarification requested for {currentTopic}");
@@ -145,8 +149,38 @@ namespace SecurityCyberBot
                     "You haven't told me what you're interested in yet.";
             }
 
+            // ✅ If user is following up to set a reminder
+            if (pendingTask != null)
+            {
+                if (input.Contains("no"))
+                {
+                    ActivityLog.Add($"⏳ No reminder set for task '{pendingTask.Title}'");
+                    var taskTitle = pendingTask.Title;
+                    pendingTask = null;
+                    return $"Okay, no reminder set for '{taskTitle}'.";
+                }
+
+                DateTime? reminder = null;
+                if (input.Contains("1 day")) reminder = DateTime.Now.AddDays(1);
+                else if (input.Contains("3 days")) reminder = DateTime.Now.AddDays(3);
+                else if (input.Contains("a week") || input.Contains("7 days")) reminder = DateTime.Now.AddDays(7);
+                else if (input.Contains("2 weeks") || input.Contains("14 days")) reminder = DateTime.Now.AddDays(14);
+                else if (input.Contains("tomorrow")) reminder = DateTime.Now.AddDays(1);
+
+                if (reminder.HasValue)
+                {
+                    pendingTask.ReminderDate = reminder;
+                    ActivityLog.Add($"⏰ Reminder set for '{pendingTask.Title}' on {reminder.Value:dd MMM yyyy}");
+                    var taskTitle = pendingTask.Title;
+                    pendingTask = null;
+                    return $"Reminder set for '{taskTitle}' on {reminder.Value:dd MMM yyyy}.";
+                }
+
+                return "When would you like to be reminded? You can say 'in 3 days', 'in 2 weeks', or 'tomorrow'.";
+            }
+
             // 👉 Custom Task Handling via NLP
-            if (ContainsAny(input, "task", "remind", "todo"))
+            if (ContainsAny(input, "task", "remind", "todo", "reminder"))
             {
                 string title = input.TrimEnd('.');
 
@@ -156,7 +190,7 @@ namespace SecurityCyberBot
                 else if (input.Contains("in 7 days") || input.Contains("in a week")) reminder = DateTime.Now.AddDays(7);
                 else if (input.Contains("in 2 weeks") || input.Contains("in fourteen days")) reminder = DateTime.Now.AddDays(14);
 
-                var task = new CybersecurityTask { Title = title, IsCompleted = false, ReminderDate = reminder };
+                var task = new CybersecurityTask { Title = ToTitleCase(title), IsCompleted = false, ReminderDate = reminder };
                 Tasks.Add(task);
 
                 string log = $"📝 Task added: '{task.Title}'";
@@ -164,17 +198,22 @@ namespace SecurityCyberBot
                 {
                     log += $" (Reminder set for {reminder.Value:dd MMM yyyy})";
                 }
-
                 ActivityLog.Add(log);
+
+                if (!reminder.HasValue)
+                {
+                    pendingTask = task;
+                    return $"Task added: '{task.Title}'. Would you like to set a reminder for this task?";
+                }
+
                 return $"Got it! I’ve added the task: '{task.Title}'" + (reminder.HasValue ? $" with reminder for {reminder.Value:dd MMM yyyy}" : "");
             }
 
-            if (ContainsAny(input, "start quiz", "take quiz", "cyber quiz"))
+            if (ContainsAny(input, "start quiz", "begin quiz", "take quiz", "cyber quiz"))
             {
                 ActivityLog.Add($"🧠 Quiz started at {DateTime.Now:HH:mm}");
                 return "Opening cybersecurity quiz...";
             }
-
 
             if (ContainsAny(input, "show log", "activity log", "what have you done"))
                 return GetActivityLogSummary();
@@ -201,6 +240,7 @@ namespace SecurityCyberBot
             return "Hmm, I didn't quite get that. Try asking about phishing, passwords, scams, or another cybersecurity topic.";
         }
 
+
         private void InitializeQuizQuestions()
         {
             QuizQuestions.AddRange(QuizQuestion.GetDefaultQuestions());
@@ -208,19 +248,57 @@ namespace SecurityCyberBot
 
         private string RespondToMood(string mood)
         {
-            if (mood.Contains("worried")) return "Cyber threats can be scary, but I'm here to help! 💪";
-            if (mood.Contains("curious")) return "Let's explore cybersecurity together! 🔍";
-            if (mood.Contains("frustrated")) return "I'll make cybersecurity simple for you! 😊";
-            return "Let's talk cybersecurity!";
+            if (mood.Contains("worried") || mood.Contains("anxious") || mood.Contains("nervous"))
+                return "Cyber threats can be scary, but I'm here to help! 💪 You're not alone.";
+
+            if (mood.Contains("curious") || mood.Contains("interested") || mood.Contains("inquisitive"))
+                return "Let's explore cybersecurity together! 🔍 There's so much to discover.";
+
+            if (mood.Contains("frustrated") || mood.Contains("confused") || mood.Contains("overwhelmed"))
+                return "I’ll make cybersecurity simple for you! 😊 One step at a time.";
+
+            if (mood.Contains("excited") || mood.Contains("motivated") || mood.Contains("ready"))
+                return "Love the energy! 💥 Let’s dive into some cybersecurity tips!";
+
+            if (mood.Contains("bored") || mood.Contains("meh") || mood.Contains("tired"))
+                return "Let me share something interesting about cybersecurity to spice things up! ⚡";
+
+            if (mood.Contains("confident") || mood.Contains("good") || mood.Contains("fine"))
+                return "Great to hear that! Let’s build on your confidence with more tips. 🛡️";
+
+            if (mood.Contains("scared") || mood.Contains("afraid"))
+                return "It’s okay to be scared. I’m here to help you feel more secure. 🕊️";
+
+            return "Thanks for sharing. Let's talk about cybersecurity!";
         }
+
 
         private string RespondToSentiment(string input, string topic)
         {
-            if (input.Contains("worried")) return $"I understand your concern about {topic}. You're not alone.";
-            if (input.Contains("curious")) return $"{ToTitleCase(topic)} is fascinating! Here's something to know:";
-            if (input.Contains("frustrated")) return $"Don't worry! I’ll help simplify {topic} for you.";
+            if (input.Contains("worried") || input.Contains("anxious") || input.Contains("nervous"))
+                return $"I understand your concern about {topic}. You're not alone — let's tackle it together.";
+
+            if (input.Contains("curious") || input.Contains("interested") || input.Contains("inquisitive"))
+                return $"{ToTitleCase(topic)} is a fascinating topic! Here's something you might not know:";
+
+            if (input.Contains("frustrated") || input.Contains("confused") || input.Contains("overwhelmed"))
+                return $"Don't worry! I’ll break down {topic} in a simpler way for you.";
+
+            if (input.Contains("excited") || input.Contains("motivated") || input.Contains("eager"))
+                return $"Awesome energy! 🔥 Let’s explore more about {topic}.";
+
+            if (input.Contains("bored") || input.Contains("meh") || input.Contains("tired"))
+                return $"Let me make {topic} a bit more exciting for you. Stick with me! ⚡";
+
+            if (input.Contains("confident") || input.Contains("fine") || input.Contains("good"))
+                return $"Great! Since you’re feeling confident, here’s something deeper about {topic}.";
+
+            if (input.Contains("scared") || input.Contains("afraid"))
+                return $"Feeling scared about {topic} is okay. Let’s look at it in a safe, simple way. 🛡️";
+
             return $"Here's something useful about {topic}.";
         }
+
 
         private string RespondWithRandomTip(string topic)
         {
